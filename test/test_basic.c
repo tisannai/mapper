@@ -192,5 +192,37 @@ void test_slinky( void )
     mp_put_key( &mp, sl3, sl3 );
 
     mp_each_key( &mp, del_each_key_fn, NULL );
+}
 
+
+struct pair_s
+{
+    int   number;
+    char* name;
+};
+
+
+
+void test_key( void )
+{
+    struct pair_s  p1 = { 12, "pair_1" };
+    struct pair_s  p2 = { 13, "pair_2" };
+    struct pair_s* pp;
+
+    mp_t mp;
+
+    mp = mp_new();
+
+    mp_put_key( mp, p1.name, &p1 );
+    mp_put_key( mp, p2.name, &p2 );
+
+    pp = mp_get_key( mp, p2.name );
+    TEST_ASSERT_TRUE( !strcmp( pp->name, p2.name ) );
+    TEST_ASSERT_TRUE( p2.number == pp->number );
+
+    pp = mp_get_key( mp, p1.name );
+    TEST_ASSERT_TRUE( !strcmp( pp->name, p1.name ) );
+    TEST_ASSERT_TRUE( p1.number == pp->number );
+
+    mp_destroy( mp );
 }

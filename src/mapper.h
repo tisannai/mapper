@@ -39,15 +39,15 @@ typedef ag_hash_t ( *mp_key_hash_fn_p )( const gr_d key );
 
 
 /**
- * Compare objects "a" and "b" keys. Return 1 if match, else 0.
+ * Compare objects "obj" and "key". Return 1 if match, else 0.
  */
-typedef int ( *mp_key_comp_fn_p )( const gr_d a, const gr_d b );
+typedef int ( *mp_key_comp_fn_p )( const gr_d obj, const gr_d key );
 
 
 /**
  * mp_each() action callback with used argument.
  */
-typedef void ( *mp_each_fn_p )( gr_d key, void* arg );
+typedef void ( *mp_each_fn_p )( gr_d value, void* arg );
 
 
 /**

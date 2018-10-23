@@ -143,7 +143,9 @@ void mp_put_key( mp_t mp, const gr_d key, const gr_d value )
 
     gr_size_t pos;
 
-    pos = ( mp->key_hash( key ) % gr_size( mp->table ) / 2 ) << 1;
+//    pos = ( mp->key_hash( key ) % ( gr_size( mp->table ) / 2 ) ) << 1;
+    pos = ( mp->key_hash( key ) % ( gr_size( mp->table ) >> 1 ) ) << 1;
+//    pos = ( mp->key_hash( key ) % gr_size( mp->table ) ) & ( UINT64_MAX - 1);
 
     if ( gr_item( mp->table, pos, gr_d ) == NULL ) {
 
@@ -182,7 +184,7 @@ gr_d mp_get_key( mp_t mp, const gr_d key )
     gr_size_t pos;
     gr_size_t start;
 
-    pos = ( mp->key_hash( key ) % gr_size( mp->table ) / 2 ) << 1;
+    pos = ( mp->key_hash( key ) % ( gr_size( mp->table ) >> 1 ) ) << 1;
     start = pos;
 
     do {
@@ -236,7 +238,7 @@ gr_d mp_del_key( mp_t mp, const gr_d key )
     gr_size_t start;
     gr_d      ret;
 
-    pos = ( mp->key_hash( key ) % gr_size( mp->table ) / 2 ) << 1;
+    pos = ( mp->key_hash( key ) % ( gr_size( mp->table ) >> 1 ) ) << 1;
     start = pos;
 
     do {
@@ -297,24 +299,27 @@ int mp_key_comp_slinky( const gr_d a, const gr_d b )
 
 void mp_each( mp_t mp, mp_each_fn_p action, void* arg )
 {
-    gr_d item;
+    gr_d key;
 
     for ( gr_size_t i = 0; i < gr_size( mp->table ); i++ ) {
-        item = gr_item( mp->table, i, gr_d );
-        if ( item )
-            action( item, arg );
+        key = gr_item( mp->table, i, gr_d );
+        if ( key )
+            action( key, arg );
     }
 }
 
 
 void mp_each_key( mp_t mp, mp_each_key_fn_p action, void* arg )
 {
-    gr_d item;
+    gr_d key;
+    gr_d value;
 
     for ( gr_size_t i = 0; i < gr_size( mp->table ); i += 2 ) {
-        item = gr_item( mp->table, i, gr_d );
-        if ( item )
-            action( item, item+1, arg );
+        key = gr_item( mp->table, i, gr_d );
+        if ( key ) {
+            value = gr_item( mp->table, i+1, gr_d );
+            action( key, value, arg );
+        }
     }
 }
 
@@ -371,11 +376,11 @@ static void mp_rehash( mp_t mp, gr_size_t new_size )
     mp->table = gr_new_sized( new_size );
     mp->used_cnt = 0;
 
-    gr_d item;
+    gr_d key;
     for ( gr_size_t i = 0; i < gr_size( old_table ); i++ ) {
-        item = gr_item( old_table, i, gr_d );
-        if ( item )
-            mp_put( mp, item );
+        key = gr_item( old_table, i, gr_d );
+        if ( key )
+            mp_put( mp, key );
     }
 }
 
@@ -394,10 +399,13 @@ static void mp_rehash_key( mp_t mp, gr_size_t new_size )
     mp->table = gr_new_sized( new_size );
     mp->used_cnt = 0;
 
-    gr_d item;
-    for ( gr_size_t i = 0; i < gr_size( old_table ); i++ ) {
-        item = gr_item( old_table, i, gr_d );
-        if ( item )
-            mp_put_key( mp, item, item + 1 );
+    gr_d key;
+    gr_d value;
+    for ( gr_size_t i = 0; i < gr_size( old_table ); i += 2 ) {
+        key = gr_item( old_table, i, gr_d );
+        if ( key ) {
+            value = gr_item( old_table, i+1, gr_d );
+            mp_put_key( mp, key, value );
+        }
     }
 }

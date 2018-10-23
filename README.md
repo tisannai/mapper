@@ -83,7 +83,7 @@ used for this purpose.
 
 See Doxygen documentation. Documentation can be created with:
 
-    shell> rake doxygen
+    shell> doxygen .doxygen
 
 
 ## Examples
@@ -96,11 +96,11 @@ directory for testcases.
 
 Ceedling based flow is in use:
 
-    shell> rake
+    shell> ceedling
 
 Testing:
 
-    shell> rake test:all
+    shell> ceedling test:all
 
 User defines can be placed into `project.yml`. Please refer to
 Ceedling documentation for details.
