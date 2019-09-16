@@ -32,6 +32,12 @@
 #endif
 
 
+struct mp_struct_s;
+typedef struct mp_struct_s mp_s; /**< Mapper struct. */
+typedef mp_s*              mp_t; /**< Mapper pointer. */
+typedef mp_t*              mp_p; /**< Mapper pointer reference. */
+
+
 /**
  * Calculate hash (64-bit) for key/object.
  */
@@ -56,24 +62,30 @@ typedef void ( *mp_each_fn_p )( gr_d value, void* arg );
 typedef void ( *mp_each_key_fn_p )( gr_d key, gr_d value, void* arg );
 
 
+/**
+ * mp_rehash() and mp_rehash_key() action callback. Called after
+ * rehash is done with user arg.
+ */
+typedef void ( *mp_rehash_fn_p )( mp_t mp, void* env );
+
+
 
 /**
  * Mapper struct.
  */
 struct mp_struct_s
 {
-    gr_t             table;    /**< Hash table (slots). */
-    mp_key_hash_fn_p key_hash; /**< Key hashing function. */
-    mp_key_comp_fn_p key_comp; /**< Key compare function. */
-    gr_size_t        used_cnt; /**< Number of entries in table. */
-    gr_size_t        fill_lim; /**< Storage limit percentage. */
+    gr_t             table;      /**< Hash table (slots). */
+    mp_key_hash_fn_p key_hash;   /**< Key hashing function. */
+    mp_key_comp_fn_p key_comp;   /**< Key compare function. */
+    gr_size_t        used_cnt;   /**< Number of entries in table. */
+    gr_size_t        fill_lim;   /**< Storage limit percentage. */
+    mp_rehash_fn_p   rehash_cb;  /**< Optional rehash callback. */
+    void*            rehash_env; /**< Context for rehash callback. */
 #if MP_USE_MISS_CNT == 1
     gr_size_t miss_cnt; /**< Miss count limit for probing. */
 #endif
 };
-typedef struct mp_struct_s mp_s; /**< Mapper struct. */
-typedef mp_s*              mp_t; /**< Mapper pointer. */
-typedef mp_t*              mp_p; /**< Mapper pointer reference. */
 
 
 
@@ -132,6 +144,49 @@ mp_t mp_destroy( mp_t mp );
 
 
 /**
+ * Set hash callback function and env.
+ *
+ * @param mp  Mapper.
+ * @param cb  Callback function.
+ * @param env Callback env.
+ */
+void mp_set_rehash_cb( mp_t mp, mp_rehash_fn_p cb, void* env );
+
+
+/**
+ * Return table index.
+ *
+ * @param mp    Mapper.
+ * @param value Object including key.
+ *
+ * @return Table index.
+ */
+gr_size_t mp_get_index( mp_t mp, const gr_d value );
+
+
+/**
+ * Return table index using key.
+ *
+ * @param mp    Mapper.
+ * @param key   Key.
+ *
+ * @return Table index.
+ */
+gr_size_t mp_get_key_index( mp_t mp, const gr_d key );
+
+
+/**
+ * Get value from Mapper with index.
+ *
+ * @param mp    Mapper.
+ * @param index Index.
+ *
+ * @return Object (or NULL).
+ */
+gr_d mp_get_with_index( mp_t mp, gr_size_t index );
+
+
+/**
  * Put value to Mapper.
  *
  * Key is expected to be included within the value and this should be
@@ -139,8 +194,10 @@ mp_t mp_destroy( mp_t mp );
  *
  * @param mp    Mapper.
  * @param value Object including key.
+ *
+ * @return Table index.
  */
-void mp_put( mp_t mp, const gr_d value );
+gr_size_t mp_put( mp_t mp, const gr_d value );
 
 
 /**
@@ -166,8 +223,10 @@ gr_d mp_get( mp_t mp, const gr_d value );
  * @param mp    Mapper.
  * @param key   Hash key.
  * @param value Object.
+ *
+ * @return Table index.
  */
-void mp_put_key( mp_t mp, const gr_d key, const gr_d value );
+gr_size_t mp_put_key( mp_t mp, const gr_d key, const gr_d value );
 
 
 /**
@@ -252,7 +311,7 @@ int mp_key_comp_slinky( const gr_d a, const gr_d b );
 
 /**
  * Process each entry in Mapper.
- * 
+ *
  * @param mp     Mapper.
  * @param action Action for entry.
  * @param arg    User argument for action.
@@ -262,7 +321,7 @@ void mp_each( mp_t mp, mp_each_fn_p action, void* arg );
 
 /**
  * Process each entry in Mapper.
- * 
+ *
  * @param mp     Mapper.
  * @param action Action for entry.
  * @param arg    User argument for action.

@@ -12,19 +12,19 @@ char* str3 = "hiihaa";
 char* str4 = "jiihaa";
 char* str5 = "jippii";
 
-typedef void ( *put_fn_p )( mp_t mp, const gr_d key, const gr_d value );
+typedef gr_size_t ( *put_fn_p )( mp_t mp, const gr_d key, const gr_d value );
 typedef gr_d ( *get_fn_p )( mp_t mp, const gr_d value );
 typedef gr_d ( *del_fn_p )( mp_t mp, const gr_d key );
 
 
 
-void put_fn_no_key( mp_t mp, const gr_d key, const gr_d value )
+gr_size_t put_fn_no_key( mp_t mp, const gr_d key, const gr_d value )
 {
     /* Use key for shits and giggles. */
     if ( key )
-        mp_put( mp, value );
+        return mp_put( mp, value );
     else
-        mp_put( mp, value );
+        return mp_put( mp, value );
 }
 
 
