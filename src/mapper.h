@@ -144,6 +144,24 @@ mp_t mp_destroy( mp_t mp );
 
 
 /**
+ * Reset Mapper, i.e. clear content.
+ *
+ * @param mp Mapper.
+ *
+ * @return NULL.
+ */
+void mp_reset( mp_t mp );
+
+
+/**
+ * Clear Mapper, i.e. reset and clear data.
+ *
+ * @param mp Mapper.
+ */
+void mp_clear( mp_t mp );
+
+
+/**
  * Set hash callback function and env.
  *
  * @param mp  Mapper.

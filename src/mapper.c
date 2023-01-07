@@ -77,6 +77,13 @@ mp_t mp_destroy( mp_t mp )
 }
 
 
+void mp_clear( mp_t mp )
+{
+    mp->used_cnt = 0;
+    gr_clear( mp->table );
+}
+
+
 void mp_set_rehash_cb( mp_t mp, mp_rehash_fn_p cb, void* env )
 {
     mp->rehash_cb = cb;
