@@ -1,7 +1,7 @@
 #include "unity.h"
 #include "mapper.h"
 #include <slinky.h>
-#include <gromer.h>
+#include <postor.h>
 
 #include <string.h>
 
@@ -12,13 +12,13 @@ char* str3 = "hiihaa";
 char* str4 = "jiihaa";
 char* str5 = "jippii";
 
-typedef gr_size_t ( *put_fn_p )( mp_t mp, const gr_d key, const gr_d value );
-typedef gr_d ( *get_fn_p )( mp_t mp, const gr_d value );
-typedef gr_d ( *del_fn_p )( mp_t mp, const gr_d key );
+typedef po_size_t ( *put_fn_p )( mp_t mp, const po_d key, const po_d value );
+typedef po_d ( *get_fn_p )( mp_t mp, const po_d value );
+typedef po_d ( *del_fn_p )( mp_t mp, const po_d key );
 
 
 
-gr_size_t put_fn_no_key( mp_t mp, const gr_d key, const gr_d value )
+po_size_t put_fn_no_key( mp_t mp, const po_d key, const po_d value )
 {
     /* Use key for shits and giggles. */
     if ( key )
@@ -40,9 +40,9 @@ void test_basic( void )
     get_fn = mp_get;
     del_fn = mp_del;
 
-    for ( gr_size_t i = 0; i < 2; i++ ) {
+    for ( po_size_t i = 0; i < 2; i++ ) {
 
-        mp = mp_new();
+        mp = mp_new( NULL );
 
         put_fn( mp, str1, str1 );
         put_fn( mp, str2, str2 );
@@ -86,9 +86,9 @@ void test_collision( void )
     get_fn = mp_get;
     del_fn = mp_del;
 
-    for ( gr_size_t i = 0; i < 2; i++ ) {
+    for ( po_size_t i = 0; i < 2; i++ ) {
 
-        mp = mp_new_full( mp_key_hash_cstr, mp_key_comp_cstr, 4, 100 );
+        mp = mp_new_full( NULL, mp_key_hash_cstr, mp_key_comp_cstr, 4, 100 );
 
         put_fn( mp, str3, str3 );
         put_fn( mp, str1, str1 );
@@ -117,7 +117,7 @@ void test_collision( void )
 
         /* Cover rehash. */
         put_fn( mp, str5, str5 );
-        TEST_ASSERT_TRUE( gr_size( mp->table ) == ( 8 * ( i + 1 ) ) );
+        TEST_ASSERT_TRUE( po_size( mp->table ) == ( 8 * ( i + 1 ) ) );
 
         mp_destroy( mp );
 
@@ -128,7 +128,7 @@ void test_collision( void )
 }
 
 
-void del_each_fn( gr_d key, void* arg )
+void del_each_fn( po_d key, void* arg )
 {
     sl_t sl = key;
     if ( arg )
@@ -138,7 +138,7 @@ void del_each_fn( gr_d key, void* arg )
 }
 
 
-void del_each_key_fn( gr_d key, gr_d value, void* arg )
+void del_each_key_fn( po_d key, po_d value, void* arg )
 {
     sl_t sl = key;
     if ( arg && value )
@@ -163,8 +163,9 @@ void test_slinky( void )
     sl2 = sl_from_str_c( str2 );
     sl3 = sl_from_str_c( str3 );
 
-    char gr_buf[ 128 ];
-    mp = mp_use( gr_use( gr_buf, 32 ), mp_key_hash_slinky, mp_key_comp_slinky, 100 );
+    po_s ps;
+    char po_buf[ 8*128 ];
+    mp_use( &mp, po_use( &ps, (po_d*)po_buf, 32 ), mp_key_hash_slinky, mp_key_comp_slinky, 100 );
 
     mp_put( &mp, sl1 );
     mp_put( &mp, sl2 );
@@ -185,7 +186,7 @@ void test_slinky( void )
     sl2 = sl_from_str_c( str2 );
     sl3 = sl_from_str_c( str3 );
 
-    mp = mp_use( gr_use( gr_buf, 128 ), mp_key_hash_slinky, mp_key_comp_slinky, 100 );
+    mp_use( &mp, po_use( &ps, (po_d*)po_buf, 128 ), mp_key_hash_slinky, mp_key_comp_slinky, 100 );
 
     mp_put_key( &mp, sl1, sl1 );
     mp_put_key( &mp, sl2, sl2 );
@@ -209,9 +210,10 @@ void test_key( void )
     struct pair_s  p2 = { 13, "pair_2" };
     struct pair_s* pp;
 
+    mp_s ms;
     mp_t mp;
 
-    mp = mp_new();
+    mp = mp_new( &ms );
 
     mp_put_key( mp, p1.name, &p1 );
     mp_put_key( mp, p2.name, &p2 );
@@ -224,5 +226,5 @@ void test_key( void )
     TEST_ASSERT_TRUE( !strcmp( pp->name, p1.name ) );
     TEST_ASSERT_TRUE( p1.number == pp->number );
 
-    mp_destroy( mp );
+    mp_destroy_table( mp );
 }

@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include <gromer.h>
+#include <postor.h>
 #include <alogir.h>
 
 
@@ -41,25 +41,25 @@ typedef mp_t*              mp_p; /**< Mapper pointer reference. */
 /**
  * Calculate hash (64-bit) for key/object.
  */
-typedef ag_hash_t ( *mp_key_hash_fn_p )( const gr_d key );
+typedef ag_hash_t ( *mp_key_hash_fn_p )( const po_d key );
 
 
 /**
  * Compare objects "obj" and "key". Return 1 if match, else 0.
  */
-typedef int ( *mp_key_comp_fn_p )( const gr_d obj, const gr_d key );
+typedef int ( *mp_key_comp_fn_p )( const po_d obj, const po_d key );
 
 
 /**
  * mp_each() action callback with used argument.
  */
-typedef void ( *mp_each_fn_p )( gr_d value, void* arg );
+typedef void ( *mp_each_fn_p )( po_d value, void* arg );
 
 
 /**
  * mp_each_key() action callback with used argument.
  */
-typedef void ( *mp_each_key_fn_p )( gr_d key, gr_d value, void* arg );
+typedef void ( *mp_each_key_fn_p )( po_d key, po_d value, void* arg );
 
 
 /**
@@ -75,15 +75,16 @@ typedef void ( *mp_rehash_fn_p )( mp_t mp, void* env );
  */
 struct mp_struct_s
 {
-    gr_t             table;      /**< Hash table (slots). */
+    po_s             table_desc; /**< Poster descriptor. */
+    po_t             table;      /**< Hash table (slots). */
     mp_key_hash_fn_p key_hash;   /**< Key hashing function. */
     mp_key_comp_fn_p key_comp;   /**< Key compare function. */
-    gr_size_t        used_cnt;   /**< Number of entries in table. */
-    gr_size_t        fill_lim;   /**< Storage limit percentage. */
+    po_size_t        used_cnt;   /**< Number of entries in table. */
+    po_size_t        fill_lim;   /**< Storage limit percentage. */
     mp_rehash_fn_p   rehash_cb;  /**< Optional rehash callback. */
     void*            rehash_env; /**< Context for rehash callback. */
 #if MP_USE_MISS_CNT == 1
-    gr_size_t miss_cnt; /**< Miss count limit for probing. */
+    po_size_t miss_cnt; /**< Miss count limit for probing. */
 #endif
 };
 
@@ -98,15 +99,24 @@ struct mp_struct_s
  * Create Mapper with defaults.
  *
  * Hash for string objects.
+ * 
+ * If mp is NULL, descriptor is allocated from heap. This
+ * type of descriptor must be freed by the user after use.
+ *
+ * @param mp Mapper or NULL.
  *
  * @return Mapper.
  */
-mp_t mp_new( void );
+mp_t mp_new( mp_t mp );
 
 
 /**
  * Create Mapper with specific features.
+ * 
+ * If mp is NULL, descriptor is allocated from heap. This
+ * type of descriptor must be freed by the user after use.
  *
+ * @param mp       Mapper or NULL.
  * @param key_hash Key hash function.
  * @param key_comp Key compare function.
  * @param size     Size for hash table.
@@ -114,23 +124,25 @@ mp_t mp_new( void );
  *
  * @return Mapper.
  */
-mp_t mp_new_full( mp_key_hash_fn_p key_hash,
+mp_t mp_new_full( mp_t mp,
+                  mp_key_hash_fn_p key_hash,
                   mp_key_comp_fn_p key_comp,
-                  gr_size_t        size,
-                  gr_size_t        fill_lim );
+                  po_size_t        size,
+                  po_size_t        fill_lim );
 
 
 /**
  * Create Mapper based on existing allocations.
  *
- * @param gr       Gromer handle.
+ * @param mp       Mapper.
+ * @param po       Postor handle.
  * @param key_hash Key hash function.
  * @param key_comp Key compare function.
  * @param fill_lim Fill limit before resize (1-100%).
  *
  * @return Mapper.
  */
-mp_s mp_use( gr_t gr, mp_key_hash_fn_p key_hash, mp_key_comp_fn_p key_comp, gr_size_t fill_lim );
+mp_t mp_use( mp_t mp, po_t po, mp_key_hash_fn_p key_hash, mp_key_comp_fn_p key_comp, po_size_t fill_lim );
 
 
 /**
@@ -141,6 +153,16 @@ mp_s mp_use( gr_t gr, mp_key_hash_fn_p key_hash, mp_key_comp_fn_p key_comp, gr_s
  * @return NULL.
  */
 mp_t mp_destroy( mp_t mp );
+
+
+/**
+ * Destroy Mapper table.
+ *
+ * @param mp Mapper.
+ *
+ * @return NULL.
+ */
+void mp_destroy_table( mp_t mp );
 
 
 /**
@@ -179,7 +201,7 @@ void mp_set_rehash_cb( mp_t mp, mp_rehash_fn_p cb, void* env );
  *
  * @return Table index.
  */
-gr_size_t mp_get_index( mp_t mp, const gr_d value );
+po_size_t mp_get_index( mp_t mp, const po_d value );
 
 
 /**
@@ -190,7 +212,7 @@ gr_size_t mp_get_index( mp_t mp, const gr_d value );
  *
  * @return Table index.
  */
-gr_size_t mp_get_key_index( mp_t mp, const gr_d key );
+po_size_t mp_get_key_index( mp_t mp, const po_d key );
 
 
 /**
@@ -201,7 +223,7 @@ gr_size_t mp_get_key_index( mp_t mp, const gr_d key );
  *
  * @return Object (or NULL).
  */
-gr_d mp_get_with_index( mp_t mp, gr_size_t index );
+po_d mp_get_with_index( mp_t mp, po_size_t index );
 
 
 /**
@@ -215,7 +237,7 @@ gr_d mp_get_with_index( mp_t mp, gr_size_t index );
  *
  * @return Table index.
  */
-gr_size_t mp_put( mp_t mp, const gr_d value );
+po_size_t mp_put( mp_t mp, const po_d value );
 
 
 /**
@@ -229,7 +251,7 @@ gr_size_t mp_put( mp_t mp, const gr_d value );
  *
  * @return Object.
  */
-gr_d mp_get( mp_t mp, const gr_d value );
+po_d mp_get( mp_t mp, const po_d value );
 
 
 /**
@@ -244,7 +266,7 @@ gr_d mp_get( mp_t mp, const gr_d value );
  *
  * @return Table index.
  */
-gr_size_t mp_put_key( mp_t mp, const gr_d key, const gr_d value );
+po_size_t mp_put_key( mp_t mp, const po_d key, const po_d value );
 
 
 /**
@@ -255,7 +277,7 @@ gr_size_t mp_put_key( mp_t mp, const gr_d key, const gr_d value );
  *
  * @return Object.
  */
-gr_d mp_get_key( mp_t mp, const gr_d key );
+po_d mp_get_key( mp_t mp, const po_d key );
 
 
 /**
@@ -266,7 +288,7 @@ gr_d mp_get_key( mp_t mp, const gr_d key );
  *
  * @return Deleted Object.
  */
-gr_d mp_del( mp_t mp, const gr_d value );
+po_d mp_del( mp_t mp, const po_d value );
 
 
 /**
@@ -277,7 +299,7 @@ gr_d mp_del( mp_t mp, const gr_d value );
  *
  * @return Deleted Object.
  */
-gr_d mp_del_key( mp_t mp, const gr_d key );
+po_d mp_del_key( mp_t mp, const po_d key );
 
 
 
@@ -292,7 +314,7 @@ gr_d mp_del_key( mp_t mp, const gr_d key );
  *
  * @return 64-bit hash.
  */
-ag_hash_t mp_key_hash_cstr( const gr_d key );
+ag_hash_t mp_key_hash_cstr( const po_d key );
 
 
 /**
@@ -303,7 +325,7 @@ ag_hash_t mp_key_hash_cstr( const gr_d key );
  *
  * @return 1 if match, else 0.
  */
-int mp_key_comp_cstr( const gr_d a, const gr_d b );
+int mp_key_comp_cstr( const po_d a, const po_d b );
 
 
 /**
@@ -313,7 +335,7 @@ int mp_key_comp_cstr( const gr_d a, const gr_d b );
  *
  * @return 64-bit hash.
  */
-ag_hash_t mp_key_hash_slinky( const gr_d key );
+ag_hash_t mp_key_hash_slinky( const po_d key );
 
 
 /**
@@ -324,7 +346,7 @@ ag_hash_t mp_key_hash_slinky( const gr_d key );
  *
  * @return 1 if match, else 0.
  */
-int mp_key_comp_slinky( const gr_d a, const gr_d b );
+int mp_key_comp_slinky( const po_d a, const po_d b );
 
 
 /**

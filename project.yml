@@ -90,7 +90,7 @@
     :executable: gcc
     :arguments:
       - ${1}
-      - -lm -lgromer -lslinky -lalogir
+      - -lm -lpostor -lslinky -lalogir
       - -o ${2}
   :gcov_linker:
     :executable: gcc
@@ -98,7 +98,7 @@
       - -fprofile-arcs
       - -ftest-coverage
       - ${1}
-      - -lm -lgromer -lslinky -lalogir
+      - -lm -lpostor -lslinky -lalogir
       - -o ${2}
   :release_compiler:
     :executable: gcc

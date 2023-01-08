@@ -1,6 +1,6 @@
 # Mapper - Hash table (map)
 
-Mapper is hash table implementation with Gromer based table
+Mapper is hash table implementation with Postor based table
 storage. It grows automatically when adjustable fill level is
 reached. Mapper can be used as object store (Object Mode), where the
 hash key is contained within the object. Mapper can also be used as
@@ -8,8 +8,8 @@ key/value store (Key Mode), where the hash key is stored separately
 from the object (value). Object Mode consumes half the memory compared
 to Key Mode.
 
-Mapper is uses open addressing and linear probing. Both are selected
-for best possible cache locality. Mapper has adjustable storage
+Mapper uses open addressing and linear probing. Both are selected for
+best possible cache locality. Mapper has adjustable storage
 limit. Typically we want to fill only half of the available slots, in
 order to reduce the number of collisions. When table requires
 resizing, the table size is doubled and all keys are rehashed (in one
